@@ -47,6 +47,9 @@ LUAMOD_API int (luaopen_package) (lua_State *L);
 #define LUA_CMSGPACKLIBNAME "cmsgpack"
 LUALIB_API int (luaopen_cmsgpack) (lua_State *L);
 
+#define LUA_CJSONLIBNAME "cjson"
+LUALIB_API int (luaopen_cjson) (lua_State *L);
+
 /* open all previous libraries */
 LUALIB_API void (luaL_openlibs) (lua_State *L);
 

@@ -54,6 +54,7 @@ static const luaL_Reg loadedlibs[] = {
   {LUA_BITLIBNAME, luaopen_bit32},
 #endif
   {LUA_CMSGPACKLIBNAME, luaopen_cmsgpack},
+  {LUA_CJSONLIBNAME, luaopen_cjson},
   {NULL, NULL}
 };
 
