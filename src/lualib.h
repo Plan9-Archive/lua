@@ -50,6 +50,9 @@ LUALIB_API int (luaopen_cmsgpack) (lua_State *L);
 #define LUA_CJSONLIBNAME "cjson"
 LUALIB_API int (luaopen_cjson) (lua_State *L);
 
+#define LUA_P9LIBNAME "p9"
+LUALIB_API int (lua_p9lib) (lua_State *L);
+
 /* open all previous libraries */
 LUALIB_API void (luaL_openlibs) (lua_State *L);
 
