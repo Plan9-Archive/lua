@@ -48,6 +48,15 @@ extern	int fprint(int fd, char *format, ...);
 extern	void lock(Lock *lk);
 extern	void unlock(Lock *lk);
 
+/* network routines */
+extern	int	accept(int, char*);
+extern	int	announce(char*, char*);
+extern	int	dial(char*, char*, char*, int*);
+extern	int	hangup(int);
+extern	int	listen(char*, char*);
+extern	char*	netmkaddr(char*, char*, char*);
+extern	int	reject(int, char*, char *);
+
 enum
 {
 	UTFmax		= 3,		/* maximum bytes per rune */

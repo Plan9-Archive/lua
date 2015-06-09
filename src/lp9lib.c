@@ -21,7 +21,7 @@ int killflag = 0;
 
 static int pusherr(lua_State *L){
     char buf[80];
-    errstr(buf,sizeof(buf));
+    rerrstr(buf,sizeof(buf));
     return pushresult(L,0,buf);
 }
 
@@ -129,7 +129,7 @@ static int p9_read(lua_State *L){
   if(na == 1){
 	luaL_Buffer lb;
  	luaL_buffinit(L, &lb);
-    while((n = read(fd,buf,sizeof(buf))) > 0)
+    while((n = _READ(fd,buf,sizeof(buf))) > 0)
       luaL_addlstring(&lb,buf,n);
     if(n < 0)
       return pusherr(L);
@@ -145,7 +145,7 @@ static int p9_read(lua_State *L){
       lua_pushstring(L,"malloc");
       lua_error(L);
     }
-    n = read(fd,p,m);
+    n = _READ(fd,p,m);
     if(n < 0){
       if(p != buf)
         free(p);
@@ -166,7 +166,7 @@ static int p9_write(lua_State *L){
   size_t size;
   const char *data = luaL_checklstring(L, 2, &size);
   long n;
-  n = write(fd,data,size);
+  n = _WRITE(fd,data,size);
   if(n < 0)
     return pusherr(L);
     /* you might think this case should raise error
@@ -491,7 +491,7 @@ static int p9_wait(lua_State *L){
 				goto noproc;
 		}
 	}
-	lua_pushinteger(L, pid);
+	lua_pushinteger(L, msg->pid);
 	if(msg->msg[0] == 0)
 		lua_pushnil(L);
 	else
@@ -540,6 +540,88 @@ static int p9_sleep(lua_State *L) {
 	return 1;
 }
 
+static int p9_create(lua_State *L){
+	char *path = luaL_checkstring(L, 1);
+	int mode = luaL_checkinteger(L, 2);
+	ulong perm = luaL_checkinteger(L, 3);
+	int fd = _CREATE(path, mode, perm);
+	if(fd < 0)
+		return pusherr(L);
+	lua_pushinteger(L, fd);
+	return 1;
+}
+
+static int p9_fd2path(lua_State *L){
+	char buf[256];
+	int fd = luaL_checkinteger(L, 1);
+	if(_FD2PATH(fd, buf, sizeof(buf)) < 0)
+		return pusherr(L);
+	lua_pushstring(L, buf);
+	return 1;
+}
+
+static int p9_exits(lua_State *L){
+	char *str = lua_tostring(L, 1);
+	_EXITS(str);
+	return 0;
+}
+
+static int p9_pipe(lua_State *L){
+	int fd[2];
+	int rv = _PIPE(fd);
+	if(rv < 0)
+		return pusherr(L);
+	lua_pushinteger(L, fd[0]);
+	lua_pushinteger(L, fd[1]);
+	return 2;
+}
+
+static int p9_dial(lua_State *L){
+	char *addr = luaL_checkstring(L, 1);
+	int fd = dial(addr, nil, nil, nil);
+	if(fd < 0)
+		return pusherr(L);
+	lua_pushinteger(L, fd);
+	return 1;
+}
+
+/* returns acfd, adir or nil, err
+ * check if first value is nil to determine
+ * if the function errored
+ */
+static int p9_announce(lua_State *L){
+	char *addr = luaL_checkstring(L, 1);
+	char adir[40];
+	int acfd = announce(addr, adir);
+	if(acfd < 0)
+		return pusherr(L);
+	lua_pushinteger(L, acfd);
+	lua_pushstring(L, adir);
+	return 2;	
+}
+
+/* same as above */
+static int p9_listen(lua_State *L){
+	char *adir = luaL_checkstring(L, 1);
+	char ldir[40];
+	int lcfd = listen(adir, ldir);
+	if(lcfd < 0)
+		return pusherr(L);
+	lua_pushinteger(L, lcfd);
+	lua_pushstring(L, ldir);
+	return 2;
+}
+
+static int p9_accept(lua_State *L){
+	int lcfd = luaL_checkinteger(L, 1);
+	char *ldir = luaL_checkstring(L, 2);
+	int dfd = accept(lcfd, ldir);
+	if(dfd < 0)
+		return pusherr(L);
+	lua_pushinteger(L, dfd);
+	return 1;
+}
+
 static const luaL_Reg p9lib[] = {
   {"open",p9_open},
   {"close",p9_close},
@@ -559,6 +641,15 @@ static const luaL_Reg p9lib[] = {
   {"alarm",p9_alarm},
   {"sleep",p9_sleep},
   {"bit",p9_bit},
+
+  {"create",p9_create},
+  {"fd2path",p9_fd2path},
+  {"exits",p9_exits},
+  {"pipe",p9_pipe},
+  {"dial",p9_dial},
+  {"announce",p9_announce},
+  {"listen",p9_listen},
+  {"accept",p9_accept},
   {NULL, NULL}
 };
 
